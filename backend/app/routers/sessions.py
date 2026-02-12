@@ -75,3 +75,12 @@ async def close_session(session_id: str, username: str = Depends(get_current_use
         raise HTTPException(status_code=404, detail="Session not found or already dead")
     await tmux.kill_session(session_id)
     return {"ok": True}
+
+
+@router.delete("/api/sessions/{session_id}/delete")
+async def delete_session(session_id: str, username: str = Depends(get_current_user)):
+    # 如果tmux还活着，先关闭
+    if await tmux.session_exists(session_id):
+        await tmux.kill_session(session_id)
+    claude_session.delete_session(username, session_id)
+    return {"ok": True}

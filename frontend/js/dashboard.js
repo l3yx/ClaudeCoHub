@@ -24,7 +24,8 @@ async function loadSessions() {
                     ${s.alive
                         ? `<a class="btn" href="/terminal.html?session=${s.session_id}">Open</a>
                            <button class="btn btn-danger" onclick="closeSession('${s.session_id}')">Close</button>`
-                        : `<button class="btn btn-success" onclick="resumeSession('${s.session_id}')">Resume</button>`
+                        : `<button class="btn btn-success" onclick="resumeSession('${s.session_id}')">Resume</button>
+                           <button class="btn btn-danger" onclick="deleteSession('${s.session_id}')">Delete</button>`
                     }
                 </td>
             </tr>
@@ -59,6 +60,16 @@ async function closeSession(id) {
         loadSessions();
     } catch (err) {
         alert('Failed to close: ' + err.message);
+    }
+}
+
+async function deleteSession(id) {
+    if (!confirm('Delete this session permanently?')) return;
+    try {
+        await apiFetch(`/api/sessions/${id}/delete`, { method: 'DELETE' });
+        loadSessions();
+    } catch (err) {
+        alert('Failed to delete: ' + err.message);
     }
 }
 

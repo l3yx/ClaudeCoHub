@@ -41,3 +41,13 @@ def discover_sessions(username: str) -> list[dict]:
 
     sessions.sort(key=lambda s: s["updated_at"], reverse=True)
     return sessions
+
+
+def delete_session(username: str, session_id: str) -> bool:
+    """Delete the .jsonl file for a session."""
+    project_dir = get_claude_project_dir(username)
+    filepath = project_dir / f"{session_id}.jsonl"
+    if filepath.exists():
+        filepath.unlink()
+        return True
+    return False
