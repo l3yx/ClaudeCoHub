@@ -28,6 +28,8 @@ async def create_session(session_id: str, workdir: str) -> bool:
         f"tmux new-session -d -s {session_id} -c {workdir} "
         f"'claude --session-id {session_id}'"
     )
+    if rc == 0:
+        await _run(f"tmux set-option -t {session_id} mouse on")
     return rc == 0
 
 
@@ -36,6 +38,8 @@ async def resume_session(session_id: str, workdir: str) -> bool:
         f"tmux new-session -d -s {session_id} -c {workdir} "
         f"'claude --resume {session_id}'"
     )
+    if rc == 0:
+        await _run(f"tmux set-option -t {session_id} mouse on")
     return rc == 0
 
 
