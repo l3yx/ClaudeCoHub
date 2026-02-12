@@ -41,8 +41,12 @@
         <h2>Scheduled Tasks</h2>
         <div class="schedule-form" id="scheduleForm">
             <div class="form-group">
-                <label>Description</label>
-                <input type="text" id="schedDesc" placeholder="Review open PRs">
+                <label>Name</label>
+                <input type="text" id="schedName" placeholder="Daily PR review">
+            </div>
+            <div class="form-group">
+                <label>Content</label>
+                <input type="text" id="schedContent" placeholder="Review open PRs and summarize">
             </div>
             <div class="form-group">
                 <label>Cron (m h d M w)</label>
@@ -54,8 +58,8 @@
             <table>
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Description</th>
+                        <th>Name</th>
+                        <th>Content</th>
                         <th>Cron</th>
                         <th>Enabled</th>
                         <th>Actions</th>

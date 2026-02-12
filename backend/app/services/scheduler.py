@@ -6,23 +6,26 @@ from pathlib import Path
 import yaml
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-from ..config import WORKDIR_BASE, get_user_workdir
+from ..config import SCHEDULES_DIR, get_user_workdir
 
 logger = logging.getLogger(__name__)
 
 scheduler = AsyncIOScheduler()
 
+SCHEDULE_FILE = SCHEDULES_DIR / "schedules.yaml"
 
-async def run_claude_task(username: str, task_id: str, description: str):
-    workdir = get_user_workdir(username)
-    log_file = workdir / ".claudecohub" / "task_output.log"
+
+async def run_claude_task(username: str, task_id: str, content: str, workdir: str):
+    log_file = SCHEDULES_DIR / "task_output.log"
+    log_file.parent.mkdir(parents=True, exist_ok=True)
 
     timestamp = datetime.now().isoformat()
-    header = f"\n{'='*60}\n[{timestamp}] Task: {task_id}\nPrompt: {description}\n{'='*60}\n"
+    header = f"\n{'='*60}\n[{timestamp}] Task: {task_id}\nPrompt: {content}\n{'='*60}\n"
 
+    cwd = workdir or str(get_user_workdir(username))
     proc = await asyncio.create_subprocess_shell(
-        f'claude -p "{description}"',
-        cwd=str(workdir),
+        f'claude -p "{content}"',
+        cwd=cwd,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.STDOUT,
     )
@@ -35,38 +38,55 @@ async def run_claude_task(username: str, task_id: str, description: str):
     logger.info(f"Task {task_id} for {username} completed (rc={proc.returncode})")
 
 
-def load_user_schedules(username: str) -> list[dict]:
-    schedule_file = get_user_workdir(username) / ".claudecohub" / "schedules.yaml"
-    if not schedule_file.exists():
+def load_schedules(workdir: str = "") -> list[dict]:
+    if not SCHEDULE_FILE.exists():
         return []
-    with open(schedule_file) as f:
+    with open(SCHEDULE_FILE) as f:
+        data = yaml.safe_load(f)
+    if not isinstance(data, list):
+        return []
+    if workdir:
+        return [s for s in data if s.get("workdir") == workdir]
+    return data
+
+
+def _load_all_schedules() -> list[dict]:
+    if not SCHEDULE_FILE.exists():
+        return []
+    with open(SCHEDULE_FILE) as f:
         data = yaml.safe_load(f)
     return data if isinstance(data, list) else []
 
 
-def save_user_schedules(username: str, schedules: list[dict]):
-    schedule_file = get_user_workdir(username) / ".claudecohub" / "schedules.yaml"
-    schedule_file.parent.mkdir(parents=True, exist_ok=True)
-    with open(schedule_file, "w") as f:
-        yaml.dump(schedules, f, default_flow_style=False, allow_unicode=True)
+def save_schedules(schedules: list[dict], workdir: str = ""):
+    SCHEDULE_FILE.parent.mkdir(parents=True, exist_ok=True)
+    if workdir:
+        # 只替换该workdir的任务，保留其他用户的
+        all_schedules = _load_all_schedules()
+        all_schedules = [s for s in all_schedules if s.get("workdir") != workdir]
+        all_schedules.extend(schedules)
+    else:
+        all_schedules = schedules
+    with open(SCHEDULE_FILE, "w") as f:
+        yaml.dump(all_schedules, f, default_flow_style=False, allow_unicode=True)
 
 
-def _job_id(username: str, task_id: str) -> str:
-    return f"schedule_{username}_{task_id}"
+def _job_id(name: str, workdir: str) -> str:
+    return f"schedule_{workdir}_{name}"
 
 
-def reload_user_schedules(username: str):
-    # Remove existing jobs for this user
+def reload_schedules():
+    # Remove all schedule jobs
     for job in scheduler.get_jobs():
-        if job.id.startswith(f"schedule_{username}_"):
+        if job.id.startswith("schedule_"):
             scheduler.remove_job(job.id)
 
     # Re-add from file
-    schedules = load_user_schedules(username)
+    schedules = _load_all_schedules()
     for s in schedules:
         if not s.get("enabled", True):
             continue
-        job_id = _job_id(username, s["id"])
+        job_id = _job_id(s["name"], s.get("workdir", ""))
         cron = s.get("cron", "")
         parts = cron.split()
         if len(parts) != 5:
@@ -81,14 +101,6 @@ def reload_user_schedules(username: str):
             day=parts[2],
             month=parts[3],
             day_of_week=parts[4],
-            args=[username, s["id"], s["description"]],
+            args=["", s["name"], s["content"], s.get("workdir", "")],
             replace_existing=True,
         )
-
-
-def load_all_schedules():
-    if not WORKDIR_BASE.exists():
-        return
-    for user_dir in WORKDIR_BASE.iterdir():
-        if user_dir.is_dir():
-            reload_user_schedules(user_dir.name)

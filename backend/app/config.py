@@ -9,6 +9,8 @@ WORKDIR_BASE = Path.home() / "workdir"
 
 CLAUDE_PROJECTS_DIR = Path.home() / ".claude" / "projects"
 
+SCHEDULES_DIR = Path.home() / ".claude" / "claudecohub"
+
 
 def get_user_workdir(username: str) -> Path:
     return WORKDIR_BASE / username

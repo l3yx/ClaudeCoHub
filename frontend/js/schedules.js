@@ -8,16 +8,16 @@ async function loadSchedules() {
         }
         tbody.innerHTML = schedules.map(s => `
             <tr>
-                <td><code>${s.id}</code></td>
-                <td>${s.description}</td>
+                <td>${s.name}</td>
+                <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${s.content}">${s.content}</td>
                 <td><code>${s.cron}</code></td>
                 <td>
-                    <button class="btn ${s.enabled ? 'btn-success' : ''}" onclick="toggleSchedule('${s.id}', ${!s.enabled})">
+                    <button class="btn ${s.enabled ? 'btn-success' : ''}" onclick="toggleSchedule('${s.name}', ${!s.enabled})">
                         ${s.enabled ? 'On' : 'Off'}
                     </button>
                 </td>
                 <td class="actions">
-                    <button class="btn btn-danger" onclick="deleteSchedule('${s.id}')">Delete</button>
+                    <button class="btn btn-danger" onclick="deleteSchedule('${s.name}')">Delete</button>
                 </td>
             </tr>
         `).join('');
@@ -27,16 +27,18 @@ async function loadSchedules() {
 }
 
 async function addSchedule() {
-    const description = document.getElementById('schedDesc').value.trim();
+    const name = document.getElementById('schedName').value.trim();
+    const content = document.getElementById('schedContent').value.trim();
     const cron = document.getElementById('schedCron').value.trim();
-    if (!description || !cron) return alert('Fill in all fields');
+    if (!name || !content || !cron) return alert('Fill in name, content and cron');
 
     try {
         await apiFetch('/api/schedules', {
             method: 'POST',
-            body: { description, cron },
+            body: { name, content, cron },
         });
-        document.getElementById('schedDesc').value = '';
+        document.getElementById('schedName').value = '';
+        document.getElementById('schedContent').value = '';
         document.getElementById('schedCron').value = '';
         loadSchedules();
     } catch (err) {
@@ -44,9 +46,9 @@ async function addSchedule() {
     }
 }
 
-async function toggleSchedule(id, enabled) {
+async function toggleSchedule(name, enabled) {
     try {
-        await apiFetch(`/api/schedules/${id}`, {
+        await apiFetch(`/api/schedules/${name}`, {
             method: 'PUT',
             body: { enabled },
         });
@@ -56,10 +58,10 @@ async function toggleSchedule(id, enabled) {
     }
 }
 
-async function deleteSchedule(id) {
+async function deleteSchedule(name) {
     if (!confirm('Delete this schedule?')) return;
     try {
-        await apiFetch(`/api/schedules/${id}`, { method: 'DELETE' });
+        await apiFetch(`/api/schedules/${name}`, { method: 'DELETE' });
         loadSchedules();
     } catch (err) {
         alert('Failed to delete: ' + err.message);

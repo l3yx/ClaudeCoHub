@@ -10,7 +10,7 @@ from .auth import router as auth_router
 from .routers.sessions import router as sessions_router
 from .routers.terminal import router as terminal_router
 from .routers.schedules import router as schedules_router
-from .services.scheduler import scheduler, load_all_schedules
+from .services.scheduler import scheduler, reload_schedules
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -18,7 +18,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    load_all_schedules()
+    reload_schedules()
     scheduler.start()
     yield
     scheduler.shutdown(wait=False)
