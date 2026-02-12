@@ -1,9 +1,14 @@
 import asyncio
+import fcntl
 import json
 import logging
 import os
+import pty
+import signal
+import struct
+import subprocess
+import termios
 
-import ptyprocess
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 
 from ..deps import get_current_user_ws
@@ -32,12 +37,15 @@ async def terminal_ws(
     env = os.environ.copy()
     env["TERM"] = "xterm-256color"
     try:
-        pty = ptyprocess.PtyProcess.spawn(
+        master_fd, slave_fd = pty.openpty()
+        # 设置初始窗口大小
+        fcntl.ioctl(slave_fd, termios.TIOCSWINSZ, struct.pack("HHHH", 24, 80, 0, 0))
+        proc = subprocess.Popen(
             ["tmux", "attach-session", "-t", session_id],
-            env=env,
-            dimensions=(24, 80),
+            stdin=slave_fd, stdout=slave_fd, stderr=slave_fd,
+            env=env, preexec_fn=os.setsid,
         )
-        pty_fd = pty.fd
+        os.close(slave_fd)
     except Exception as e:
         logger.error(f"Failed to spawn pty: {e}")
         await websocket.send_text(json.dumps({"error": str(e)}))
@@ -52,7 +60,7 @@ async def terminal_ws(
             while not closed.is_set():
                 try:
                     data = await loop.run_in_executor(
-                        None, lambda: os.read(pty_fd, 4096)
+                        None, lambda: os.read(master_fd, 4096)
                     )
                 except OSError:
                     break
@@ -75,17 +83,18 @@ async def terminal_ws(
             if msg.get("type") == "websocket.disconnect":
                 break
             if "bytes" in msg:
-                pty.write(msg["bytes"])
+                os.write(master_fd, msg["bytes"])
             elif "text" in msg:
                 text = msg["text"]
                 try:
                     cmd = json.loads(text)
                     if cmd.get("type") == "resize":
-                        pty.setwinsize(cmd["rows"], cmd["cols"])
+                        fcntl.ioctl(master_fd, termios.TIOCSWINSZ,
+                                    struct.pack("HHHH", cmd["rows"], cmd["cols"], 0, 0))
                         continue
                 except (json.JSONDecodeError, KeyError):
                     pass
-                pty.write(text.encode())
+                os.write(master_fd, text.encode())
     except WebSocketDisconnect:
         pass
     except Exception as e:
@@ -95,13 +104,16 @@ async def terminal_ws(
         reader_task.cancel()
         # Detach from tmux instead of killing
         try:
-            if pty.isalive():
-                pty.write(b"\x02d")
-                await asyncio.sleep(0.3)
-        except (OSError, EOFError):
+            os.write(master_fd, b"\x02d")
+            await asyncio.sleep(0.3)
+        except OSError:
             pass
         try:
-            if pty.isalive():
-                pty.terminate(force=True)
-        except Exception:
+            os.close(master_fd)
+        except OSError:
             pass
+        try:
+            proc.send_signal(signal.SIGHUP)
+            proc.wait(timeout=2)
+        except Exception:
+            proc.kill()
