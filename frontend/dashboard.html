@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClaudeCoHub - Dashboard</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <span class="navbar-brand">ClaudeCoHub</span>
+        <div class="navbar-right">
+            <span id="userDisplay"></span>
+            <button class="btn" onclick="logout()">Logout</button>
+        </div>
+    </nav>
+    <div class="container">
+        <!-- Sessions -->
+        <div class="header-actions">
+            <h1>Sessions</h1>
+            <button class="btn btn-primary" onclick="createSession()">New Session</button>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Session ID</th>
+                        <th>Updated</th>
+                        <th>State</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="sessionsBody">
+                    <tr><td colspan="5" style="text-align:center;color:var(--text-muted)">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Schedules -->
+        <h2>Scheduled Tasks</h2>
+        <div class="schedule-form" id="scheduleForm">
+            <div class="form-group">
+                <label>Description</label>
+                <input type="text" id="schedDesc" placeholder="Review open PRs">
+            </div>
+            <div class="form-group">
+                <label>Cron (m h d M w)</label>
+                <input type="text" id="schedCron" placeholder="0 9 * * 1-5">
+            </div>
+            <button class="btn btn-primary" onclick="addSchedule()">Add</button>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Description</th>
+                        <th>Cron</th>
+                        <th>Enabled</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="schedulesBody">
+                    <tr><td colspan="5" style="text-align:center;color:var(--text-muted)">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script src="/js/api.js"></script>
+    <script src="/js/dashboard.js"></script>
+    <script src="/js/schedules.js"></script>
+</body>
+</html>

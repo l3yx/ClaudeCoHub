@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClaudeCoHub - Terminal</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/css/xterm.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a class="navbar-brand" href="/dashboard.html" style="text-decoration:none;color:inherit">ClaudeCoHub</a>
+        <div class="navbar-right">
+            <span id="sessionLabel" style="font-family:monospace;font-size:0.8rem"></span>
+            <a class="btn" href="/dashboard.html">Back</a>
+        </div>
+    </nav>
+    <div class="terminal-container" id="terminalContainer"></div>
+    <div class="overlay" id="overlay" hidden>
+        <div class="overlay-box">
+            <p id="overlayMsg">Connection lost</p>
+            <button class="btn btn-primary" onclick="reconnect()">Reconnect</button>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/lib/xterm.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0.10.0/lib/addon-fit.min.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/terminal.js"></script>
+</body>
+</html>
