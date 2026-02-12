@@ -167,6 +167,7 @@ tr:last-child td { border-bottom: none; }
 .badge-dead { background: rgba(248,81,73,0.15); color: var(--danger); }
 .badge-working { background: rgba(210,153,34,0.15); color: var(--warning); }
 .badge-idle { background: rgba(88,166,255,0.15); color: var(--primary); }
+.badge-idle\+bg { background: rgba(163,113,247,0.15); color: #a371f7; }
 
 .actions { display: flex; gap: 0.5rem; }
 

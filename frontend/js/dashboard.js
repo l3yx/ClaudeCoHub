@@ -12,14 +12,13 @@ async function loadSessions() {
         const sessions = await apiFetch('/api/sessions');
         const tbody = document.getElementById('sessionsBody');
         if (sessions.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted)">No sessions yet</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted)">No sessions yet</td></tr>';
             return;
         }
         tbody.innerHTML = sessions.map(s => `
             <tr>
                 <td><code>${s.session_id.substring(0, 8)}</code></td>
-                <td>${new Date(s.updated_at).toLocaleString()}</td>
-                <td><span class="badge badge-${s.alive ? 'alive' : 'dead'}">${s.alive ? 'alive' : 'dead'}</span></td>
+                <td>${s.updated_at ? new Date(s.updated_at).toLocaleString() : '-'}</td>
                 <td><span class="badge badge-${s.status}">${s.status}</span></td>
                 <td class="actions">
                     ${s.alive

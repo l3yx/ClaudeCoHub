@@ -9,15 +9,27 @@ UUID_RE = re.compile(
 )
 
 
+def _is_real_session(filepath: Path) -> bool:
+    """Check if a .jsonl file is a real session by looking for 'sessionId' keyword."""
+    try:
+        with open(filepath, "r", encoding="utf-8", errors="replace") as f:
+            for line in f:
+                if '"sessionId"' in line:
+                    return True
+        return False
+    except OSError:
+        return False
+
+
 def discover_sessions(username: str) -> list[dict]:
-    """Scan Claude project dir for UUID-named .jsonl files."""
+    """Scan Claude project dir for UUID-named .jsonl files that are real sessions."""
     project_dir = get_claude_project_dir(username)
     if not project_dir.exists():
         return []
 
     sessions = []
     for f in project_dir.iterdir():
-        if f.suffix == ".jsonl" and UUID_RE.match(f.stem):
+        if f.suffix == ".jsonl" and UUID_RE.match(f.stem) and _is_real_session(f):
             stat = f.stat()
             sessions.append(
                 {

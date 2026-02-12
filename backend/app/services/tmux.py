@@ -52,11 +52,13 @@ async def capture_last_lines(session_id: str, n: int = 5) -> str:
 
 
 async def detect_status(session_id: str) -> Optional[str]:
-    """Return 'working', 'idle', or None if session doesn't exist."""
+    """Return 'working', 'idle+bg', 'idle', or None if session doesn't exist."""
     if not await session_exists(session_id):
         return None
     lines = await capture_last_lines(session_id, 5)
     lower = lines.lower()
-    if "esc to interrupt" in lower or "running" in lower:
+    if "esc to interrupt" in lower:
         return "working"
+    if "(running)" in lower:
+        return "idle+bg"
     return "idle"
