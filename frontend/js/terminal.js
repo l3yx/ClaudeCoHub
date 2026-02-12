@@ -33,8 +33,7 @@ function connect() {
     ws.binaryType = 'arraybuffer';
 
     ws.onopen = () => {
-        document.getElementById('overlay').hidden = true;
-        // Send initial size
+        document.getElementById('overlay').style.display = 'none';
         ws.send(JSON.stringify({ type: 'resize', cols: term.cols, rows: term.rows }));
     };
 
@@ -47,11 +46,11 @@ function connect() {
     };
 
     ws.onclose = () => {
-        document.getElementById('overlay').hidden = false;
+        document.getElementById('overlay').style.display = 'flex';
     };
 
     ws.onerror = () => {
-        document.getElementById('overlay').hidden = false;
+        document.getElementById('overlay').style.display = 'flex';
     };
 }
 

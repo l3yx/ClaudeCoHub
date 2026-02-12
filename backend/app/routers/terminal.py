@@ -37,6 +37,7 @@ async def terminal_ws(
             env=env,
             dimensions=(24, 80),
         )
+        pty_fd = pty.fd
     except Exception as e:
         logger.error(f"Failed to spawn pty: {e}")
         await websocket.send_text(json.dumps({"error": str(e)}))
@@ -50,14 +51,15 @@ async def terminal_ws(
         try:
             while not closed.is_set():
                 try:
-                    # ptyprocess.read() returns str
-                    data = await loop.run_in_executor(None, lambda: pty.read(4096))
-                except EOFError:
+                    data = await loop.run_in_executor(
+                        None, lambda: os.read(pty_fd, 4096)
+                    )
+                except OSError:
                     break
                 if not data:
                     break
                 try:
-                    await websocket.send_text(data)
+                    await websocket.send_bytes(data)
                 except Exception:
                     break
         except Exception as e:
