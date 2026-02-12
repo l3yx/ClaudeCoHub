@@ -9,7 +9,6 @@ from .config import (
     JWT_ALGORITHM,
     JWT_EXPIRE_HOURS,
     get_user_workdir,
-    get_claude_project_dir,
 )
 
 router = APIRouter()
@@ -31,15 +30,9 @@ async def login(req: LoginRequest):
     if req.username != req.password:
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    # Ensure user directories exist
+    # Ensure user workdir exists
     workdir = get_user_workdir(req.username)
     workdir.mkdir(parents=True, exist_ok=True)
-    (workdir / ".claude").mkdir(exist_ok=True)
-    (workdir / ".claudecohub").mkdir(exist_ok=True)
-
-    # Also ensure the claude project dir exists
-    project_dir = get_claude_project_dir(req.username)
-    project_dir.mkdir(parents=True, exist_ok=True)
 
     exp = datetime.now(timezone.utc) + timedelta(hours=JWT_EXPIRE_HOURS)
     token = jwt.encode(
