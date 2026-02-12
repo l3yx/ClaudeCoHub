@@ -14,13 +14,9 @@ async def list_sessions(username: str = Depends(get_current_user)):
     discovered = claude_session.discover_sessions(username)
     alive_sessions = await tmux.list_tmux_sessions()
 
-    seen_ids = set()
     results = []
-
-    # Sessions found from .jsonl files
     for s in discovered:
         sid = s["session_id"]
-        seen_ids.add(sid)
         alive = sid in alive_sessions
         status = None
         if alive:
@@ -34,18 +30,6 @@ async def list_sessions(username: str = Depends(get_current_user)):
                 "first_message": s.get("first_message", ""),
             }
         )
-
-    # Also include tmux sessions that have no .jsonl yet (newly created)
-    for sid in alive_sessions:
-        if sid not in seen_ids:
-            status = await tmux.detect_status(sid)
-            results.insert(0, {
-                "session_id": sid,
-                "updated_at": None,
-                "alive": True,
-                "status": status or "idle",
-                "first_message": "",
-            })
 
     return results
 
