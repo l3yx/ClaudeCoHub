@@ -1,6 +1,6 @@
+import json
 import re
 from pathlib import Path
-from datetime import datetime
 
 from ..config import get_claude_project_dir
 
@@ -21,6 +21,47 @@ def _is_real_session(filepath: Path) -> bool:
         return False
 
 
+def _get_first_message(filepath: Path) -> str:
+    """Extract the content of the first user message from a .jsonl file."""
+    try:
+        with open(filepath, "r", encoding="utf-8", errors="replace") as f:
+            for line in f:
+                try:
+                    obj = json.loads(line)
+                    msg = obj.get("message")
+                    if isinstance(msg, dict) and msg.get("content"):
+                        return msg["content"][:100]
+                except (json.JSONDecodeError, KeyError):
+                    continue
+    except OSError:
+        pass
+    return ""
+
+
+def _get_last_timestamp(filepath: Path) -> str:
+    """Get the timestamp from the last line of a .jsonl file."""
+    try:
+        with open(filepath, "rb") as f:
+            # 从文件末尾往前读取最后一行
+            f.seek(0, 2)
+            size = f.tell()
+            if size == 0:
+                return ""
+            pos = size - 1
+            while pos > 0:
+                f.seek(pos)
+                if f.read(1) == b"\n" and pos < size - 1:
+                    break
+                pos -= 1
+            last_line = f.read().decode("utf-8", errors="replace").strip()
+            if last_line:
+                obj = json.loads(last_line)
+                return obj.get("timestamp", "")
+    except (OSError, json.JSONDecodeError):
+        pass
+    return ""
+
+
 def discover_sessions(username: str) -> list[dict]:
     """Scan Claude project dir for UUID-named .jsonl files that are real sessions."""
     project_dir = get_claude_project_dir(username)
@@ -30,12 +71,11 @@ def discover_sessions(username: str) -> list[dict]:
     sessions = []
     for f in project_dir.iterdir():
         if f.suffix == ".jsonl" and UUID_RE.match(f.stem) and _is_real_session(f):
-            stat = f.stat()
             sessions.append(
                 {
                     "session_id": f.stem,
-                    "updated_at": datetime.fromtimestamp(stat.st_mtime).isoformat(),
-                    "size_bytes": stat.st_size,
+                    "updated_at": _get_last_timestamp(f),
+                    "first_message": _get_first_message(f),
                 }
             )
 

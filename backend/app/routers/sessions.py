@@ -31,6 +31,7 @@ async def list_sessions(username: str = Depends(get_current_user)):
                 "updated_at": s["updated_at"],
                 "alive": alive,
                 "status": status or ("idle" if alive else "dead"),
+                "first_message": s.get("first_message", ""),
             }
         )
 
@@ -43,6 +44,7 @@ async def list_sessions(username: str = Depends(get_current_user)):
                 "updated_at": None,
                 "alive": True,
                 "status": status or "idle",
+                "first_message": "",
             })
 
     return results
