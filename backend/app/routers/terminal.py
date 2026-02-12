@@ -88,9 +88,11 @@ async def terminal_ws(
                 text = msg["text"]
                 try:
                     cmd = json.loads(text)
-                    if cmd.get("type") == "resize":
+                    if isinstance(cmd, dict) and cmd.get("type") == "resize":
+                        rows, cols = cmd["rows"], cmd["cols"]
                         fcntl.ioctl(master_fd, termios.TIOCSWINSZ,
-                                    struct.pack("HHHH", cmd["rows"], cmd["cols"], 0, 0))
+                                    struct.pack("HHHH", rows, cols, 0, 0))
+                        os.kill(proc.pid, signal.SIGWINCH)
                         continue
                 except (json.JSONDecodeError, KeyError):
                     pass
