@@ -10,8 +10,8 @@ router = APIRouter()
 
 
 @router.get("/api/sessions")
-async def list_sessions(username: str = Depends(get_current_user)):
-    discovered = claude_session.discover_sessions(username)
+async def list_sessions(uid: str = Depends(get_current_user)):
+    discovered = claude_session.discover_sessions(uid)
     alive_sessions = await tmux.list_tmux_sessions()
 
     results = []
@@ -35,9 +35,9 @@ async def list_sessions(username: str = Depends(get_current_user)):
 
 
 @router.post("/api/sessions")
-async def create_session(username: str = Depends(get_current_user)):
+async def create_session(uid: str = Depends(get_current_user)):
     session_id = str(uuid.uuid4())
-    workdir = str(get_user_workdir(username))
+    workdir = str(get_user_workdir(uid))
     ok = await tmux.create_session(session_id, workdir)
     if not ok:
         raise HTTPException(status_code=500, detail="Failed to create tmux session")
@@ -45,10 +45,10 @@ async def create_session(username: str = Depends(get_current_user)):
 
 
 @router.post("/api/sessions/{session_id}/resume")
-async def resume_session(session_id: str, username: str = Depends(get_current_user)):
+async def resume_session(session_id: str, uid: str = Depends(get_current_user)):
     if await tmux.session_exists(session_id):
         raise HTTPException(status_code=400, detail="Session already alive")
-    workdir = str(get_user_workdir(username))
+    workdir = str(get_user_workdir(uid))
     ok = await tmux.resume_session(session_id, workdir)
     if not ok:
         raise HTTPException(status_code=500, detail="Failed to resume session")
@@ -56,7 +56,7 @@ async def resume_session(session_id: str, username: str = Depends(get_current_us
 
 
 @router.delete("/api/sessions/{session_id}")
-async def close_session(session_id: str, username: str = Depends(get_current_user)):
+async def close_session(session_id: str, uid: str = Depends(get_current_user)):
     if not await tmux.session_exists(session_id):
         raise HTTPException(status_code=404, detail="Session not found or already dead")
     await tmux.kill_session(session_id)
@@ -64,9 +64,8 @@ async def close_session(session_id: str, username: str = Depends(get_current_use
 
 
 @router.delete("/api/sessions/{session_id}/delete")
-async def delete_session(session_id: str, username: str = Depends(get_current_user)):
-    # 如果tmux还活着，先关闭
+async def delete_session(session_id: str, uid: str = Depends(get_current_user)):
     if await tmux.session_exists(session_id):
         await tmux.kill_session(session_id)
-    claude_session.delete_session(username, session_id)
+    claude_session.delete_session(uid, session_id)
     return {"ok": True}

@@ -9,7 +9,7 @@ router = APIRouter()
 
 
 @router.get("/api/admin/overview")
-async def admin_overview(username: str = Depends(get_current_user)):
+async def admin_overview(uid: str = Depends(get_current_user)):
     alive_sessions = await tmux.list_tmux_sessions()
 
     users = []

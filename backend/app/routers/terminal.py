@@ -22,7 +22,7 @@ router = APIRouter()
 async def terminal_ws(
     websocket: WebSocket,
     session_id: str,
-    username: str = Depends(get_current_user_ws),
+    uid: str = Depends(get_current_user_ws),
 ):
     await websocket.accept()
 

@@ -20,9 +20,9 @@ def get_current_user_ws(token: str = Query(...)) -> str:
 def _decode_token(token: str) -> str:
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[JWT_ALGORITHM])
-        username: str = payload.get("sub")
-        if username is None:
+        uid: str = payload.get("sub")
+        if uid is None:
             raise HTTPException(status_code=401, detail="Invalid token")
-        return username
+        return uid
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")

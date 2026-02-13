@@ -10,6 +10,7 @@ function setToken(token) {
 
 function clearToken() {
     localStorage.removeItem('token');
+    localStorage.removeItem('uid');
     localStorage.removeItem('username');
 }
 

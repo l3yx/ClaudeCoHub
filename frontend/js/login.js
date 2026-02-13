@@ -3,15 +3,16 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     const errEl = document.getElementById('error');
     errEl.hidden = true;
 
-    const username = document.getElementById('username').value.trim();
+    const uid = document.getElementById('uid').value.trim();
     const password = document.getElementById('password').value;
 
     try {
         const data = await apiFetch('/api/login', {
             method: 'POST',
-            body: { username, password },
+            body: { uid, password },
         });
         setToken(data.token);
+        localStorage.setItem('uid', data.uid);
         localStorage.setItem('username', data.username);
         window.location.href = '/dashboard.html';
     } catch (err) {

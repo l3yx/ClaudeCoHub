@@ -27,16 +27,16 @@ class ScheduleUpdate(BaseModel):
 
 
 @router.get("/api/schedules")
-async def list_schedules(username: str = Depends(get_current_user)):
-    workdir = str(get_user_workdir(username))
+async def list_schedules(uid: str = Depends(get_current_user)):
+    workdir = str(get_user_workdir(uid))
     return load_schedules(workdir)
 
 
 @router.post("/api/schedules")
 async def create_schedule(
-    req: ScheduleCreate, username: str = Depends(get_current_user)
+    req: ScheduleCreate, uid: str = Depends(get_current_user)
 ):
-    workdir = str(get_user_workdir(username))
+    workdir = str(get_user_workdir(uid))
     schedules = load_schedules(workdir)
     if any(s["name"] == req.name for s in schedules):
         raise HTTPException(status_code=400, detail="Schedule name already exists")
@@ -57,9 +57,9 @@ async def create_schedule(
 async def update_schedule(
     name: str,
     req: ScheduleUpdate,
-    username: str = Depends(get_current_user),
+    uid: str = Depends(get_current_user),
 ):
-    workdir = str(get_user_workdir(username))
+    workdir = str(get_user_workdir(uid))
     schedules = load_schedules(workdir)
     target = next((s for s in schedules if s["name"] == name), None)
     if not target:
@@ -79,9 +79,9 @@ async def update_schedule(
 
 @router.delete("/api/schedules/{name}")
 async def delete_schedule(
-    name: str, username: str = Depends(get_current_user)
+    name: str, uid: str = Depends(get_current_user)
 ):
-    workdir = str(get_user_workdir(username))
+    workdir = str(get_user_workdir(uid))
     schedules = load_schedules(workdir)
     schedules = [s for s in schedules if s["name"] != name]
     save_schedules(schedules, workdir)
