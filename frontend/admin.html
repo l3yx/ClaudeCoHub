@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClaudeCoHub - Admin</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <span class="navbar-brand">ClaudeCoHub - Admin</span>
+        <div class="navbar-right">
+            <a class="btn" href="/dashboard.html">Dashboard</a>
+            <span id="userDisplay"></span>
+            <button class="btn" onclick="logout()">Logout</button>
+        </div>
+    </nav>
+    <div class="container">
+        <h1>All Users Sessions</h1>
+        <div id="usersContainer"></div>
+
+        <h2>All Scheduled Tasks</h2>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Content</th>
+                        <th>Cron</th>
+                        <th>Workdir</th>
+                        <th>Enabled</th>
+                    </tr>
+                </thead>
+                <tbody id="schedulesBody">
+                    <tr><td colspan="5" style="text-align:center;color:var(--text-muted)">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script src="/js/api.js"></script>
+    <script src="/js/admin.js"></script>
+</body>
+</html>
